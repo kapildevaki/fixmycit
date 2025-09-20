@@ -1,0 +1,100 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>User Dashboard - FixMyCity</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+    <style>
+        /* Additional styling for user dashboard */
+        .report-card img {
+            max-width: 200px;
+            margin-top: 10px;
+            border-radius: 12px;
+        }
+        .submit-form {
+            margin-bottom: 30px;
+            padding: 15px;
+            border: 1px solid #ddd;
+            border-radius: 12px;
+            background-color: #f8f9fa;
+        }
+        .submit-form label {
+            font-weight: 500;
+        }
+        .report-card p {
+            margin: 5px 0;
+        }
+        .status-pending { color: #ffc107; font-weight: bold; }
+        .status-inprogress { color: #17a2b8; font-weight: bold; }
+        .status-resolved { color: #28a745; font-weight: bold; }
+    </style>
+</head>
+<body>
+<div class="container">
+    <h1>User Dashboard</h1>
+    <p class="logout"><a href="/logout">Logout</a></p>
+    <p>✅ Logged in Aadhaar: <b>{{ session['aadhaar'] }}</b></p>
+
+    <!-- Submit New Report -->
+    <div class="submit-form">
+        <h2>Submit New Report</h2>
+        <form method="POST" enctype="multipart/form-data" id="reportForm">
+            <label>Upload Photo:</label>
+            <input type="file" name="photo" id="photoInput" required>
+
+            <!-- Hidden inputs for geolocation -->
+            <input type="hidden" name="latitude" id="lat">
+            <input type="hidden" name="longitude" id="lon">
+
+            <button type="submit">Submit Report</button>
+        </form>
+        <p id="geoStatus" style="color:red; font-weight:bold;"></p>
+    </div>
+
+    <!-- User Reports -->
+    <h2>Your Reports</h2>
+    {% for r in reports %}
+        <div class="report-card">
+            <p><b>Status:</b>
+                <span class="status-{{ r['status']|lower|replace(' ','') }}">{{ r['status'] }}</span>
+            </p>
+            <p><b>Category:</b> {{ r['category'] }}</p>
+            <img src="{{ url_for('uploads', filename=r['user_photo']) }}">
+            {% if r['office_photo'] %}
+                <p><b>Office Photo:</b></p>
+                <img src="{{ url_for('uploads', filename=r['office_photo']) }}">
+            {% endif %}
+        </div>
+    {% else %}
+        <p>No reports submitted yet.</p>
+    {% endfor %}
+</div>
+
+<script>
+    // Ensure geolocation is set before submitting
+    function setGeoLocation() {
+        if (navigator.geolocation) {
+            navigator.geolocation.getCurrentPosition(pos => {
+                document.getElementById('lat').value = pos.coords.latitude;
+                document.getElementById('lon').value = pos.coords.longitude;
+                document.getElementById('geoStatus').innerText = "";
+            }, err => {
+                document.getElementById('lat').value = 0;
+                document.getElementById('lon').value = 0;
+                document.getElementById('geoStatus').innerText = "⚠️ Location not detected. Default location set.";
+            });
+        } else {
+            document.getElementById('lat').value = 0;
+            document.getElementById('lon').value = 0;
+            document.getElementById('geoStatus').innerText = "⚠️ Geolocation not supported. Default location set.";
+        }
+    }
+
+    document.getElementById('reportForm').addEventListener('submit', function(e){
+        setGeoLocation();
+    });
+
+    // Call once on page load to fill hidden inputs
+    setGeoLocation();
+</script>
+</body>
+</html>

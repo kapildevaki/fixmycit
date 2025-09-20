@@ -1,0 +1,72 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Office Dashboard</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+    <link rel="stylesheet" href="https://unpkg.com/leaflet.markercluster@1.5.3/dist/MarkerCluster.css"/>
+    <link rel="stylesheet" href="https://unpkg.com/leaflet.markercluster@1.5.3/dist/MarkerCluster.Default.css"/>
+</head>
+<body>
+<div class="container">
+    <h1>Office Dashboard</h1>
+    <div id="map"></div>
+
+    {% for r in reports %}
+    <div class="report-card">
+        <p><b>Aadhaar:</b> {{ r['aadhaar'] }}</p>
+        <p><b>Status:</b> {{ r['status'] }}</p>
+        <p><b>Category:</b> {{ r['category'] }}</p>
+        <img src="{{ url_for('uploads', filename=r['user_photo']) }}">
+        {% if r['office_photo'] %}
+            <p>Office Photo:</p>
+            <img src="{{ url_for('uploads', filename=r['office_photo']) }}">
+        {% endif %}
+
+        <form method="POST" enctype="multipart/form-data">
+            <input type="hidden" name="report_id" value="{{ r['id'] }}">
+            <select name="status">
+                <option value="Pending" {% if r['status']=='Pending' %}selected{% endif %}>Pending</option>
+                <option value="In Progress" {% if r['status']=='In Progress' %}selected{% endif %}>In Progress</option>
+                <option value="Resolved" {% if r['status']=='Resolved' %}selected{% endif %}>Resolved</option>
+            </select>
+            <input type="file" name="office_photo">
+            <button type="submit">Update</button>
+        </form>
+    </div>
+    {% else %}
+        <p>No reports yet.</p>
+    {% endfor %}
+</div>
+
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<script src="https://unpkg.com/leaflet.markercluster@1.5.3/dist/leaflet.markercluster.js"></script>
+<script>
+    var map = L.map('map').setView([20.5937, 78.9629], 5);
+    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',{
+        attribution:'&copy; OpenStreetMap contributors'
+    }).addTo(map);
+
+    var markers = L.markerClusterGroup();
+
+    {% for r in reports %}
+        {% if r['latitude'] and r['longitude'] %}
+        var marker = L.marker([{{ r['latitude'] }}, {{ r['longitude'] }}]);
+        marker.bindPopup(`
+            <b>Status:</b> {{ r['status'] }}<br>
+            <b>Category:</b> {{ r['category'] }}<br>
+            <b>Aadhaar:</b> {{ r['aadhaar'] }}<br>
+            <img src="{{ url_for('uploads', filename=r['user_photo']) }}" width="100"><br>
+            {% if r['office_photo'] %}
+                <b>Office Photo:</b><br>
+                <img src="{{ url_for('uploads', filename=r['office_photo']) }}" width="100">
+            {% endif %}
+        `);
+        markers.addLayer(marker);
+        {% endif %}
+    {% endfor %}
+
+    map.addLayer(markers);
+</script>
+</body>
+</html>

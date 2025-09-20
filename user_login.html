@@ -1,0 +1,16 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>User Login</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+</head>
+<body>
+<div class="container">
+    <h2>Login with Aadhaar</h2>
+    <form method="POST">
+        <input type="text" name="aadhaar" placeholder="Enter Aadhaar Number" required>
+        <button type="submit">Login</button>
+    </form>
+</div>
+</body>
+</html>
